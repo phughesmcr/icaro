@@ -1,0 +1,13 @@
+{
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "files.eol": "\n",
+    "files.autoSave": "afterDelay",
+    "editor.rulers": [
+        120
+    ],
+    "vscode-edge-devtools.headless": true,
+    "vscode-edge-devtools.defaultUrl": "http://localhost:5500/game",
+    "debug.toolBarLocation": "hidden",
+    "liveServer.settings.NoBrowser": true
+}

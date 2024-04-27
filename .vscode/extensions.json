@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "editorconfig.editorconfig",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "ms-edgedevtools.vscode-edge-devtools",
+        "github.vscode-github-actions",
+        "ritwickdey.liveserver",
+        "fabiospampinato.vscode-statusbar-debugger"
+    ]
+}
