@@ -15,32 +15,28 @@ import Player from './Player.js';
  * A Game is the top-level container for a game world.
  */
 export default class Game extends Emitter {
+  static DEFAULT_TILESIZE = 64;
+
   /** @type {number} */
   #currentMap = -1;
 
   /** @type {Array<GameMap>} */
-  #maps;
+  #maps = [];
 
   /** @type {Player} */
-  #player;
+  #player = new Player();
 
-  /** @type {Readonly<Array<String>>} */
-  #tiles;
+  /** @type {Array<String>} */
+  #tiles = [];
 
   /** @type {number} */
-  #tileSize;
+  #tileSize = Game.DEFAULT_TILESIZE;
 
   /**
    * Create a new Game
-   * @param {GameSpec} spec
    */
-  constructor(spec) {
+  constructor() {
     super();
-    const { maps, tiles, tileSize } = spec;
-    this.#maps = maps.map((map) => new GameMap(map));
-    this.#player = new Player();
-    this.#tiles = Object.freeze([...tiles]);
-    this.#tileSize = tileSize;
     Object.seal(this);
   }
 
@@ -64,7 +60,7 @@ export default class Game extends Emitter {
     return this.#player;
   }
 
-  /** @returns {Readonly<Array<String>>} */
+  /** @returns {Array<String>} */
   get tiles() {
     return this.#tiles;
   }
@@ -92,10 +88,18 @@ export default class Game extends Emitter {
     this.emit('mapChange', this.#maps[index]);
   }
 
-  /** @returns {Promise<any>} */
-  async init() {
+  /**
+   * @param {GameSpec} spec
+   * @returns {Promise<Game>}
+   */
+  async init(spec) {
+    const { maps, tiles, tileSize } = spec;
+    this.#tileSize = tileSize;
+    tiles.forEach((tile) => this.#tiles.push(tile));
+    maps.forEach((map) => this.#maps.push(new GameMap(map)));
+
     // TODO: load assets
-    return [];
+    return this;
   }
 
   /** @param {number} delta */

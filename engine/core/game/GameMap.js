@@ -11,7 +11,7 @@
 import Vec2 from '../../math/Vec2.js';
 
 export default class GameMap {
-  static TILES = [
+  static DEFAULT_TILES = [
     // brick
     '#FF0000',
     // grass

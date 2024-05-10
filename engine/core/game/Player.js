@@ -4,13 +4,13 @@ import Vec2 from '../../math/Vec2.js';
 
 export default class Player {
   /** @type {RotVec2} */
-  direction = new RotVec2(0, 1);
+  orientation = new RotVec2(0, 1);
 
   /** @type {Vec2} */
   position = new Vec2(0, 0);
 
   /** @type {Mat2} */
-  rotation = new Mat2();
+  rotationMatrix = new Mat2();
 
   /** @type {number} */
   rotationSpeed = 0.003;
@@ -47,8 +47,8 @@ export default class Player {
 
   reset() {
     this.position.set(0, 0);
-    this.direction.set(0, 1);
-    this.rotation.setRotation(this.direction);
+    this.orientation.set(0, 1);
+    this.rotationMatrix.setRotation(this.orientation.x, this.orientation.y);
   }
 
   /**
@@ -59,15 +59,20 @@ export default class Player {
    * @param {number} [zoom=1]
    */
   update(delta, map, tileSize, zoom = 1) {
-    this.direction.rotateBy(this.turnDirection * this.rotationSpeed * delta);
-    this.rotation.setRotation(this.direction);
+    this.orientation.rotateBy(this.turnDirection * this.rotationSpeed * delta);
+    this.rotationMatrix.setRotation(this.orientation.x, this.orientation.y);
     const moveStep = this.walkDirection * this.movementSpeed * delta * zoom;
     if (moveStep === 0) return;
-    const newPlayerX = this.position.x + this.direction.x * moveStep;
-    const newPlayerY = this.position.y + this.direction.y * moveStep;
-    const newPlayerTileX = Math.floor(newPlayerX / (tileSize * zoom));
-    const newPlayerTileY = Math.floor(newPlayerY / (tileSize * zoom));
-    if (!map.isWallAt(newPlayerTileX, newPlayerTileY)) {
+    const newPlayerX = this.position.x + this.orientation.x * moveStep;
+    const newPlayerY = this.position.y + this.orientation.y * moveStep;
+    if (
+      !map.isWallAt(
+        // tile x
+        Math.floor(newPlayerX / (tileSize * zoom)),
+        // tile y
+        Math.floor(newPlayerY / (tileSize * zoom))
+      )
+    ) {
       this.position.x = newPlayerX;
       this.position.y = newPlayerY;
     }
@@ -81,7 +86,7 @@ export default class Player {
   draw2d(ctx) {
     ctx.save();
     ctx.translate(this.position.x, this.position.y);
-    ctx.rotate(this.rotation.rotation);
+    ctx.rotate(this.rotationMatrix.rotation);
     ctx.fillStyle = 'red';
     ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
     ctx.strokeStyle = 'white';
