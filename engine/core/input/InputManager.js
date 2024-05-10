@@ -1,3 +1,4 @@
+import GamePad from './GamePad.js';
 import Keyboard from './Keyboard.js';
 import Mouse from './Mouse.js';
 
@@ -7,6 +8,12 @@ import Mouse from './Mouse.js';
  * The InputHandler manages the keyboard and mouse input.
  */
 export default class InputManager {
+  /**
+   * @readonly
+   * @type {GamePad}
+   */
+  gamepad;
+
   /**
    * @readonly
    * @type {Keyboard}
@@ -23,9 +30,10 @@ export default class InputManager {
    * Create a new InputHandler
    */
   constructor() {
+    this.gamepad = new GamePad();
     this.keyboard = new Keyboard();
     this.mouse = new Mouse();
-    Object.seal(this);
+    Object.freeze(this);
   }
 
   /**
@@ -33,6 +41,7 @@ export default class InputManager {
    * @returns {this}
    */
   init() {
+    this.gamepad.init();
     this.keyboard.init();
     this.mouse.init();
     return this;
@@ -40,7 +49,7 @@ export default class InputManager {
 
   /** @returns {boolean} - True if document.pointerLockElement is set */
   isPointerLocked() {
-    return !!document?.pointerLockElement;
+    return !!globalThis.document?.pointerLockElement;
   }
 
   /**
@@ -59,7 +68,6 @@ export default class InputManager {
    */
   update() {
     this.keyboard.update();
-    this.mouse.update();
     return this;
   }
 }

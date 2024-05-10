@@ -5,10 +5,10 @@
  */
 export default class Mouse {
   /** @type {number} */
-  moveX = 0;
+  dx = 0;
 
   /** @type {number} */
-  moveY = 0;
+  dy = 0;
 
   /** @type {number} */
   x = 0;
@@ -43,20 +43,12 @@ export default class Mouse {
    * @returns {this}
    */
   reset() {
-    this.moveX = 0;
-    this.moveY = 0;
+    this.dx = 0;
+    this.dy = 0;
     this.x = 0;
     this.y = 0;
     this.leftBtn = false;
     this.rightBtn = false;
-    return this;
-  }
-
-  /**
-   * Update the mouse state
-   * @returns {this}
-   */
-  update() {
     return this;
   }
 }

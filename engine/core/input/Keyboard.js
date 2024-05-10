@@ -4,56 +4,38 @@
  * The Keyboard handler manages the state of the keyboard input.
  */
 export default class Keyboard {
-  static GLOBAL_LISTENERS = [
-    { name: 'keydown', handler: 'keyDown' },
-    { name: 'keyup', handler: 'keyUp' },
-  ];
+  /** @type {Set<string>} */
+  static CAPTURED_KEYCODES = new Set([
+    'KeyW',
+    'KeyA',
+    'KeyS',
+    'KeyD',
+    'Space',
+    'Escape',
+    'ShiftLeft',
+    'ControlRight',
+    'CapsLock',
+    'Tab',
+    'Enter',
+    'ArrowUp',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowRight',
+    'Equal',
+    'Minus',
+  ]);
 
-  /** @type {Readonly<Record<string, string>>} */
-  static KEYCODES = Object.freeze({
-    KeyW: 'KeyW',
-    KeyA: 'KeyA',
-    KeyS: 'KeyS',
-    KeyD: 'KeyD',
-    Space: 'Space',
-    Escape: 'Escape',
-    ShiftLeft: 'ShiftLeft',
-    ControlRight: 'ControlRight',
-    CapsLock: 'CapsLock',
-    Tab: 'Tab',
-    Enter: 'Enter',
-    ArrowUp: 'ArrowUp',
-    ArrowDown: 'ArrowDown',
-    ArrowLeft: 'ArrowLeft',
-    ArrowRight: 'ArrowRight',
-    Equal: 'Equal',
-    Minus: 'Minus',
-  });
+  /** @type {Set<string>} */
+  #state = new Set();
 
-  /** @type {Readonly<Array<string>>} */
-  static USED_KEYS = Object.freeze(Object.keys(Keyboard.KEYCODES));
-
-  /** @type {Map<string, boolean>} */
-  #state;
-
-  /** @type {Map<string, boolean>} */
-  #previousState;
+  /** @type {Set<string>} */
+  #previousState = new Set();
 
   /**
    * Create a new Keyboard handler
    */
   constructor() {
-    this.#state = new Map(Array.from(Keyboard.USED_KEYS, (key) => [key, false]));
-    this.#previousState = new Map(this.#state);
-    Object.seal(this);
-  }
-
-  #addEventListeners() {
-    for (const { name, handler } of Keyboard.GLOBAL_LISTENERS) {
-      if (!(handler in this)) continue;
-      // @ts-ignore
-      document.addEventListener(name, (e) => this[handler](e));
-    }
+    Object.freeze(this);
   }
 
   /**
@@ -62,10 +44,9 @@ export default class Keyboard {
    * @returns {void}
    */
   keyUp(e) {
-    const { code } = e;
-    if (code in Keyboard.KEYCODES) {
+    if (Keyboard.CAPTURED_KEYCODES.has(e.code)) {
       e.preventDefault();
-      this.#state.set(code, false);
+      this.#state.delete(e.code);
     }
   }
 
@@ -75,21 +56,9 @@ export default class Keyboard {
    * @returns {void}
    */
   keyDown(e) {
-    const { code } = e;
-    if (code in Keyboard.KEYCODES) {
+    if (Keyboard.CAPTURED_KEYCODES.has(e.code)) {
       e.preventDefault();
-      this.#state.set(code, true);
-    }
-  }
-
-  /**
-   * Update the previous state to match the current state
-   * @returns {void}
-   */
-  #updatePreviousState() {
-    // NOTE: instead of this.#previousState = new Map(this.#state);
-    for (const [key, value] of this.#state) {
-      this.#previousState.set(key, value);
+      this.#state.add(e.code);
     }
   }
 
@@ -99,7 +68,6 @@ export default class Keyboard {
    */
   init() {
     this.reset();
-    this.#addEventListeners();
     return this;
   }
 
@@ -109,7 +77,7 @@ export default class Keyboard {
    * @returns {boolean} - True if the key is down
    */
   isDown(code) {
-    return !!this.#state.get(code);
+    return this.#state.has(code);
   }
 
   /**
@@ -118,7 +86,7 @@ export default class Keyboard {
    * @returns {boolean} - True if the key was pressed
    */
   wasPressed(code) {
-    return !!(this.#state.get(code) && !this.#previousState.get(code));
+    return this.#state.has(code) && !this.#previousState.has(code);
   }
 
   /**
@@ -126,11 +94,8 @@ export default class Keyboard {
    * @returns {this}
    */
   reset() {
-    // NOTE: instead of this.#state = new Map(...);
-    for (const [key, _] of this.#state) {
-      this.#state.set(key, false);
-    }
-    this.#updatePreviousState();
+    this.#state.clear();
+    this.#previousState.clear();
     return this;
   }
 
@@ -139,7 +104,11 @@ export default class Keyboard {
    * @returns {this}
    */
   update() {
-    this.#updatePreviousState();
+    // NOTE: instead of this.#previousState = new Set(this.#state);
+    this.#previousState.clear();
+    for (const key of this.#state) {
+      this.#previousState.add(key);
+    }
     return this;
   }
 }
