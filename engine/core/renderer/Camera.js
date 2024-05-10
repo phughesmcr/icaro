@@ -3,6 +3,7 @@ import { clamp } from '../../utils.js';
 
 /**
  * @module
+ *
  * Based on:
  * @see {@link https://github.com/robashton/camera/}
  * @license Unlicensed
@@ -105,6 +106,9 @@ export default class Camera {
   screenToWorld(x, y, obj = {}) {
     obj.x = x / this.zoom + this.x;
     obj.y = y / this.zoom + this.y;
+
+    /* (screenPos.x - mainCanvasSize.x/2 + .5) /  cameraScale + cameraPos.x,
+      (screenPos.y - mainCanvasSize.y/2 + .5) / -cameraScale + cameraPos.y */
     return obj;
   }
 
@@ -118,6 +122,9 @@ export default class Camera {
   worldToScreen(x, y, obj = {}) {
     obj.x = (x - this.x) * this.zoom;
     obj.y = (y - this.y) * this.zoom;
+
+    /*    (worldPos.x - cameraPos.x) *  cameraScale + mainCanvasSize.x/2 - .5,
+        (worldPos.y - cameraPos.y) * -cameraScale + mainCanvasSize.y/2 - .5 */
     return obj;
   }
 
@@ -154,6 +161,7 @@ export default class Camera {
    * @param {number} width
    * @param {number} height
    * @returns {this}
+   * @note remember to resize the raycaster too!
    */
   resize(width, height) {
     this.width = width;

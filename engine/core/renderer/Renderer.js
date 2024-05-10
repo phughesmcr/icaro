@@ -1,6 +1,8 @@
+import Vec2 from '../../math/Vec2.js';
 import { clamp } from '../../utils.js';
 import Camera from './Camera.js';
 import Canvas from './Canvas.js';
+import RayCaster from './raycaster/Raycaster.js';
 
 /**
  * @module
@@ -9,24 +11,40 @@ import Canvas from './Canvas.js';
  * the Canvas and Camera, which are used to render the Game class.
  */
 export default class Renderer {
-  /** @readonly */
+  static DEFAULT_TILESIZE = 64;
+
+  /**
+   * @readonly
+   * @type {Camera}
+   */
   camera;
 
-  /** @readonly */
+  /**
+   * @readonly
+   * @type {Canvas}
+   */
   canvas;
 
-  /** @readonly */
-  tileSize;
+  /**
+   * @readonly
+   * @type {RayCaster}
+   */
+  raycaster;
+
+  /**
+   * @readonly
+   * @type {number}
+   */
+  tileSize = Renderer.DEFAULT_TILESIZE;
 
   /**
    * Create a new Renderer.
    * @param {HTMLCanvasElement} canvas
-   * @param {number} tileSize - the size of a tile in pixels
    */
-  constructor(canvas, tileSize) {
-    this.tileSize = Math.round(tileSize);
+  constructor(canvas) {
     this.canvas = new Canvas(canvas, Math.round(globalThis.devicePixelRatio ?? 2));
     this.camera = new Camera(this.canvas.width, this.canvas.height);
+    this.raycaster = new RayCaster(this.camera.width);
     Object.seal(this);
   }
 
@@ -40,7 +58,7 @@ export default class Renderer {
 
     this.canvas.clear();
 
-    this.camera.centerOn(game.player.position.x, game.player.position.y);
+    this.camera.centerOn(Math.round(game.player.position.x), Math.round(game.player.position.y));
 
     this.camera.render(this.canvas.buffer, () => {
       // draw the map
@@ -79,18 +97,72 @@ export default class Renderer {
       game.player.draw2d(this.canvas.buffer);
     });
 
-    if (this.canvas.isDirty) {
-      this.canvas.render();
-    }
+    return this;
+  }
+
+  /**
+   *
+   * @param {import('../game/Game.js').default} game
+   * @param {number} alpha
+   * @returns
+   */
+  draw3d(game, alpha) {
+    const { currentMap } = game;
+    if (!currentMap) return this;
+
+    this.canvas.clear();
+
+    this.camera.reset();
+
+    this.camera.render(this.canvas.buffer, () => {
+      // ceiling
+      this.canvas.buffer.fillStyle = currentMap.ceiling;
+      this.canvas.buffer.fillRect(0, 0, this.canvas.width, this.canvas.height / this.canvas.dpi / 2);
+
+      // floor
+      this.canvas.buffer.fillStyle = currentMap.floor;
+      this.canvas.buffer.fillRect(0, this.canvas.height / this.canvas.dpi / 2, this.canvas.width, this.canvas.height);
+
+      // walls
+      for (let i = 0; i < this.raycaster.rays.length; i++) {
+        const ray = this.raycaster.rays[i];
+        if (!ray) continue;
+
+        // get the perpendicular distance to the wall to fix fishbowl distortion
+        const correctWallDistance = Vec2.project(Vec2.to(game.player.position, ray.wallHit), game.player.orientation);
+
+        // calculate the distance to the projection plane
+        const distanceProjectionPlane = ((currentMap.width * this.tileSize) / 2) * (RayCaster.FOCAL_LENGTH / 2);
+
+        // projected wall height
+        const wallStripHeight = -(this.tileSize / correctWallDistance) * distanceProjectionPlane;
+
+        this.canvas.buffer.fillStyle = game.tiles[currentMap.getGridAt(ray.wallHit.x, ray.wallHit.y)] ?? 'white';
+        this.canvas.buffer.fillRect(
+          i * RayCaster.RAY_WIDTH * this.canvas.dpi,
+          this.canvas.height / this.canvas.dpi / 2 - wallStripHeight / 2,
+          RayCaster.RAY_WIDTH * this.canvas.dpi,
+          wallStripHeight
+        );
+      }
+    });
 
     return this;
   }
 
   /**
+   * @param {number} tileSize
    * @returns {this}
    */
-  init() {
+  init(tileSize) {
+    this.tileSize = tileSize;
     this.canvas.init();
     return this;
+  }
+
+  render() {
+    if (this.canvas.isDirty) {
+      this.canvas.render();
+    }
   }
 }

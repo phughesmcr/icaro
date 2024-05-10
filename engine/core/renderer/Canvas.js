@@ -4,6 +4,9 @@
  * The Canvas is a wrapper around the HTML5 Canvas API.
  */
 export default class Canvas {
+  /** @type {DOMRect} */
+  #boundingClientRect;
+
   /** @type {OffscreenCanvasRenderingContext2D} */
   #bufferCtx;
 
@@ -25,6 +28,7 @@ export default class Canvas {
    * @param {number} [dpi]
    */
   constructor(el, dpi = 1) {
+    this.#boundingClientRect = el.getBoundingClientRect();
     // @ts-ignore
     this.#bufferCtx = new OffscreenCanvas(el.width, el.height).getContext('2d');
     // @ts-ignore
@@ -32,6 +36,10 @@ export default class Canvas {
     this.#dpi = Math.floor(dpi);
     this.#element = el;
     Object.seal(this);
+  }
+
+  get boundingClientRect() {
+    return this.#boundingClientRect;
   }
 
   get buffer() {
@@ -168,6 +176,7 @@ export default class Canvas {
     this.#ctx.save();
     this.#bufferCtx.canvas.height = height;
     this.#bufferCtx.canvas.width = width;
+    this.#boundingClientRect = this.#element.getBoundingClientRect();
     // this.resizeDOM();
     return this;
   }
