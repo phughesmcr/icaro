@@ -1,6 +1,11 @@
 import Mat2 from './Mat2.js';
 import Vec2 from './Vec2.js';
 
+/**
+ * @module
+ *
+ * A 2d Vector that can be rotated
+ */
 export default class RotVec2 extends Vec2 {
   /** @type {Mat2} */
   #rotationMatrix;
@@ -13,12 +18,15 @@ export default class RotVec2 extends Vec2 {
   constructor(x, y) {
     super(x, y);
     this.#rotationMatrix = new Mat2();
+    Object.freeze(this);
   }
 
+  /** @returns {Mat2} */
   get rotationMatrix() {
     return this.#rotationMatrix;
   }
 
+  /** @returns {number} */
   get rotation() {
     return this.#rotationMatrix.rotation;
   }

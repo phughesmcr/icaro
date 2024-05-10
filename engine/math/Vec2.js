@@ -1,19 +1,42 @@
+/**
+ * @module
+ *
+ * A 2d Vector
+ */
 export default class Vec2 {
-  /** @type {number} */
-  x = 0;
-
-  /** @type {number} */
-  y = 0;
+  /** @type {Float32Array} */
+  #buffer;
 
   /**
-   * Create a new Vec2
+   * Create a new 2d Vector
    * @param {number} x
    * @param {number} y
    */
   constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    Object.seal(this);
+    this.#buffer = Float32Array.from([x, y]);
+    Object.freeze(this);
+  }
+
+  /** @returns {number} */
+  get x() {
+    // @ts-ignore
+    return this.#buffer[0];
+  }
+
+  /** @param {number} value */
+  set x(value) {
+    this.#buffer[0] = value;
+  }
+
+  /** @returns {number} */
+  get y() {
+    // @ts-ignore
+    return this.#buffer[1];
+  }
+
+  /** @param {number} value */
+  set y(value) {
+    this.#buffer[1] = value;
   }
 
   /**
@@ -30,10 +53,8 @@ export default class Vec2 {
    * @returns {this}
    */
   multiplyBy(mat2) {
-    const { a, b, c, d } = mat2;
-    const { x, y } = this;
-    this.x = a * x + c * y;
-    this.y = b * x + d * y;
+    this.x = mat2.a * this.x + mat2.c * this.y;
+    this.y = mat2.b * this.x + mat2.d * this.y;
     return this;
   }
 
@@ -63,29 +84,32 @@ export default class Vec2 {
 
   /**
    * Project this vector onto another
-   * @param {Vec2} target
+   * @param {Vec2} source - The source vector
+   * @param {Vec2} target - The target vector
    * @returns {number}
    */
-  project(target) {
-    return this.x * target.x + this.y * target.y;
+  static project(source, target) {
+    return source.x * target.x + source.y * target.y;
   }
 
   /**
    * Move this vector towards a target by a given amount
+   * @param {Vec2} source - The source vector
    * @param {Vec2} target - The target vector
    * @param {Vec2} [out] - Optional output vector
    * @returns {Vec2}
    */
-  to(target, out = new Vec2(0, 0)) {
-    return out.set(target.x - this.x, target.y - this.y);
+  static to(source, target, out = new Vec2(0, 0)) {
+    return out.set(target.x - source.x, target.y - source.y);
   }
 
   /**
    * Calculate the squared distance between this vector and another
-   * @param {Vec2} target
+   * @param {Vec2} source - The source vector
+   * @param {Vec2} target - The target vector
    * @returns {number}
    */
-  squaredDistanceBetween(target) {
-    return (target.x - this.x) * (target.x - this.x) + (target.y - this.y) * (target.y - this.y);
+  static squaredDistanceBetween(source, target) {
+    return (target.x - source.x) * (target.x - source.x) + (target.y - source.y) * (target.y - source.y);
   }
 }
