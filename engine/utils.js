@@ -8,8 +8,8 @@ export const loadImage = (url) => {
     img.crossOrigin = 'anonymous';
     img.style.imageRendering = '-moz-crisp-edges';
     img.style.imageRendering = '-webkit-crisp-edges';
-    img.style.imageRendering = 'pixelated';
     img.style.imageRendering = 'crisp-edges';
+    img.style.imageRendering = 'pixelated';
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = url.toString();
