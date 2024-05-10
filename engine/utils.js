@@ -63,3 +63,38 @@ export const throttle = (callback, time, thisArg) => {
  * @returns {number}
  */
 export const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+
+/**
+ * Try to request pointer lock on an element without throwing an error.
+ * @param {Element} element
+ * @returns {Promise<Element>}
+ */
+export const requestPointerLockSafely = async (element) => {
+  if (!globalThis.document?.pointerLockElement && element.requestPointerLock) {
+    try {
+      // @ts-ignore
+      await element.requestPointerLock({
+        unadjustedMovement: true,
+      });
+    } catch (_) {
+      try {
+        element.requestPointerLock();
+      } catch (_) {}
+    }
+  }
+  return element;
+};
+
+/**
+ * Try to request fullscreen on an element without throwing an error.
+ * @param {Element} element
+ * @returns {Promise<Element>}
+ */
+export const requestFullscreenSafely = async (element) => {
+  try {
+    if (!globalThis.document?.fullscreenElement && element.requestFullscreen) {
+      await element.requestFullscreen({ navigationUI: 'hide' });
+    }
+  } catch (_) {}
+  return element;
+};
