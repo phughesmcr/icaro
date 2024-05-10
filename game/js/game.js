@@ -12,13 +12,14 @@ async function main() {
   globalThis.game = game;
 
   const engine = new Engine({
+    // @ts-ignore
     canvas: document.querySelector('canvas#engine'),
     game,
   });
 
-  await engine.init();
-  engine.start();
-  engine.changeMap(0);
+  await engine.init(game);
+  engine.ticker.start();
+  engine.game.changeMap(0);
 
   // @ts-ignore
   globalThis.engine = engine;
