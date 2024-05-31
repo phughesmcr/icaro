@@ -1,12 +1,15 @@
+/**
+ * @module       InputManager
+ * @description  The InputManager handles the keyboard and mouse input.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ */
+
 import GamePad from './GamePad.js';
 import Keyboard from './Keyboard.js';
 import Mouse from './Mouse.js';
 
-/**
- * @module
- *
- * The InputHandler manages the keyboard and mouse input.
- */
 export default class InputManager {
   /**
    * @readonly
@@ -33,7 +36,6 @@ export default class InputManager {
     this.gamepad = new GamePad();
     this.keyboard = new Keyboard();
     this.mouse = new Mouse();
-    Object.freeze(this);
   }
 
   /**

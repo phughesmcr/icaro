@@ -1,19 +1,21 @@
-import Vec2 from '../../math/Vec2.js';
-import { clamp } from '../../utils.js';
-
 /**
- * @module
- *
- * Based on:
- * @see {@link https://github.com/robashton/camera/}
- * @license Unlicensed
+ * @module       Camera
+ * @description  A Camera class for rendering to a canvas context with a given viewport size and zoom level.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ * @see          {@link https://github.com/robashton/camera/}
  */
+
+import Vec2 from '../../math/Vec2.js';
+import { clamp } from '../../math/utils.js';
+
 export default class Camera {
   height;
   width;
-  x;
-  y;
-  #zoom;
+  x = 0;
+  y = 0;
+  #zoom = 1;
 
   /**
    * Create a new Camera.
@@ -23,10 +25,6 @@ export default class Camera {
   constructor(width, height) {
     this.height = height;
     this.width = width;
-    this.x = 0;
-    this.y = 0;
-    this.#zoom = 1;
-    Object.seal(this);
   }
 
   get zoom() {
@@ -64,15 +62,12 @@ export default class Camera {
   /**
    * Correctly scales and translates the canvas context ahead of rendering
    * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} ctx - the canvas context to render to
-   * @param {Function} callback - the rendering function
    * @returns {this}
    */
-  render(ctx, callback) {
+  prepareCtx(ctx) {
     ctx.save();
     ctx.scale(this.zoom, this.zoom);
     ctx.translate(-this.x, -this.y);
-    callback();
-    ctx.restore();
     return this;
   }
 

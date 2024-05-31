@@ -1,4 +1,14 @@
+/**
+ * @module       Player
+ * @description  The Player class for handling player input and movement.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ * @see          {@link https://github.com/HardCoreCodin/Rational-Ray-Casting}
+ */
+
 import Mat2 from '../../math/Mat2.js';
+import { floor } from '../../math/utils.js';
 import RotVec2 from '../../math/RotVec2.js';
 import Vec2 from '../../math/Vec2.js';
 
@@ -27,11 +37,8 @@ export default class Player {
   /** @type {number} */
   radius = 4;
 
+  /** @type {number} */
   size = 32;
-
-  constructor() {
-    Object.seal(this);
-  }
 
   /**
    * Set the player position
@@ -40,9 +47,12 @@ export default class Player {
    * @param {number} tileSize
    */
   placeAt(xTile, yTile, tileSize) {
-    const x = tileSize * xTile + (tileSize - this.size) / 2;
-    const y = tileSize * yTile + (tileSize - this.size) / 2;
-    this.position.set(x, y);
+    this.position.set(
+      // x
+      tileSize * xTile + (tileSize - this.size) / 2,
+      // y
+      tileSize * yTile + (tileSize - this.size) / 2
+    );
   }
 
   reset() {
@@ -68,9 +78,9 @@ export default class Player {
     if (
       !map.isWallAt(
         // tile x
-        Math.floor(newPlayerX / (tileSize * zoom)),
+        floor(newPlayerX / (tileSize * zoom)),
         // tile y
-        Math.floor(newPlayerY / (tileSize * zoom))
+        floor(newPlayerY / (tileSize * zoom))
       )
     ) {
       this.position.x = newPlayerX;

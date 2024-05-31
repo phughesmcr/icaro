@@ -1,29 +1,40 @@
 /**
- * @module
- *
- * A 2x2 Matrix
+ * @module       Mat2
+ * @description  2x2 Matrix
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
  */
+
 export default class Mat2 {
   /** @type {Float32Array} */
-  #buffer;
+  #buffer = new Float32Array(4);
 
   /**
    * Create a new 2x2 Matrix
-   * @param {number} [a=1]
-   * @param {number} [b=0]
-   * @param {number} [c=0]
-   * @param {number} [d=1]
+   * @param {number} [a=1] The top-left value
+   * @param {number} [b=0] The top-right value
+   * @param {number} [c=0] The bottom-left value
+   * @param {number} [d=1] The bottom-right value
    * @note ```
    * | a  b |
    * | c  d |
    * ```
    */
   constructor(a = 1, b = 0, c = 0, d = 1) {
-    this.#buffer = Float32Array.from([a, b, c, d]);
-    Object.freeze(this);
+    this.#buffer[0] = a;
+    this.#buffer[1] = b;
+    this.#buffer[2] = c;
+    this.#buffer[3] = d;
   }
 
-  /** @returns {number} */
+  /**
+   * @returns {number}
+   * @note ```
+   * | a  b |
+   * | c  d |
+   * ```
+   */
   get a() {
     // @ts-ignore
     return this.#buffer[0];
@@ -34,7 +45,13 @@ export default class Mat2 {
     this.#buffer[0] = value;
   }
 
-  /** @returns {number} */
+  /**
+   * @returns {number}
+   * @note ```
+   * | a  b |
+   * | c  d |
+   * ```
+   */
   get b() {
     // @ts-ignore
     return this.#buffer[1];
@@ -45,7 +62,13 @@ export default class Mat2 {
     this.#buffer[1] = value;
   }
 
-  /** @returns {number} */
+  /**
+   * @returns {number}
+   * @note ```
+   * | a  b |
+   * | c  d |
+   * ```
+   */
   get c() {
     // @ts-ignore
     return this.#buffer[2];
@@ -56,7 +79,13 @@ export default class Mat2 {
     this.#buffer[2] = value;
   }
 
-  /** @returns {number} */
+  /**
+   * @returns {number}
+   * @note ```
+   * | a  b |
+   * | c  d |
+   * ```
+   */
   get d() {
     // @ts-ignore
     return this.#buffer[3];
@@ -79,10 +108,10 @@ export default class Mat2 {
    * @returns {this}
    */
   setRotation(x, y) {
-    this.a = x;
-    this.b = y;
-    this.c = -y;
-    this.d = x;
+    this.#buffer[0] = x;
+    this.#buffer[1] = y;
+    this.#buffer[2] = -y;
+    this.#buffer[3] = x;
     return this;
   }
 
@@ -94,7 +123,6 @@ export default class Mat2 {
   rotateBy(angle) {
     const t2 = angle * angle;
     const mult = 1 / (1 + t2);
-    // @ts-ignore
     return this.setRotation((1 - t2) * mult, 2 * angle * mult);
   }
 }

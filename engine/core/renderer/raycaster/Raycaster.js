@@ -1,12 +1,15 @@
+/**
+ * @module       Raycaster
+ * @description  The RayCaster class is responsible for generating an iterable of Rays.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ */
+
 import Mat2 from '../../../math/Mat2.js';
 import RotVec2 from '../../../math/RotVec2.js';
 import Ray from './Ray.js';
 
-/**
- * @module
- *
- * The RayCaster class is responsible for generating an iterable of Rays.
- */
 export default class RayCaster {
   static RAY_WIDTH = 8;
   static FOCAL_LENGTH = 3.5;
@@ -35,7 +38,6 @@ export default class RayCaster {
     this.#rays = Array.from({ length: width / RayCaster.RAY_WIDTH }, () => new Ray(this.#direction));
     this.#rotationMatrix = new Mat2();
     this.#rayStep = RayCaster.PROJECTION_PLANE_WIDTH / this.#rays.length;
-    Object.seal(this);
   }
 
   /** @type {Array<Ray>} */

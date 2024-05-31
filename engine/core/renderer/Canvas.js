@@ -1,54 +1,32 @@
 /**
- * @module
- *
- * The Canvas is a wrapper around the HTML5 Canvas API.
+ * @module       Canvas
+ * @description  A wrapper around the HTML5 Canvas API.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
  */
-export default class Canvas {
-  /** @type {DOMRect} */
-  #boundingClientRect;
 
+export default class Canvas {
   /** @type {OffscreenCanvasRenderingContext2D} */
   #bufferCtx;
 
-  /** @type {CanvasRenderingContext2D} */
-  #ctx;
-
-  /** @type {HTMLCanvasElement} */
-  #element;
-
   /** @type {boolean} */
-  #dirty = true;
+  #dirty;
 
   /** @type {number} */
   #dpi;
 
-  /**
-   * Create a new Canvas.
-   * @param {HTMLCanvasElement} el
-   * @param {number} [dpi]
-   */
-  constructor(el, dpi = 1) {
-    this.#boundingClientRect = el.getBoundingClientRect();
+  constructor(width = 640, height = 480, dpi = 2) {
     // @ts-ignore
-    this.#bufferCtx = new OffscreenCanvas(el.width, el.height).getContext('2d');
-    // @ts-ignore
-    this.#ctx = el.getContext('2d', { desynchronized: true });
+    this.#bufferCtx = new OffscreenCanvas(width, height).getContext('2d');
+    this.#bufferCtx.imageSmoothingEnabled = false;
     this.#dpi = Math.floor(dpi);
-    this.#element = el;
-    Object.seal(this);
+    this.#dirty = true;
   }
 
-  get boundingClientRect() {
-    return this.#boundingClientRect;
-  }
-
-  get buffer() {
-    return this.#bufferCtx;
-  }
-
-  /** @returns {CanvasRenderingContext2D} */
+  /** @returns {OffscreenCanvasRenderingContext2D} */
   get ctx() {
-    return this.#ctx;
+    return this.#bufferCtx;
   }
 
   /** @returns {number} */
@@ -58,23 +36,18 @@ export default class Canvas {
 
   /** @param {number} value */
   set dpi(value) {
-    this.#dpi = Math.floor(value);
+    this.#dpi = Math.abs(Math.floor(value) || 1);
     this.resize(this.width, this.height);
-  }
-
-  /** @returns {HTMLCanvasElement} */
-  get element() {
-    return this.#element;
   }
 
   /** @returns {number} */
   get height() {
-    return this.#element.height;
+    return this.#bufferCtx.canvas.height;
   }
 
   /** @returns {number} */
   get width() {
-    return this.#element.width;
+    return this.#bufferCtx.canvas.width;
   }
 
   /** @returns {boolean} */
@@ -87,54 +60,44 @@ export default class Canvas {
    * @returns {this}
    */
   clear() {
-    this.#bufferCtx.clearRect(0, 0, this.width, this.width);
     this.#dirty = true;
-    return this;
-  }
-
-  /**
-   * Draw an image to the canvas
-   * @param {CanvasImageSource} img
-   * @param {number} sx
-   * @param {number} sy
-   * @param {number} sWidth
-   * @param {number} sHeight
-   * @param {number} [dx]
-   * @param {number} [dy]
-   * @param {number} [dWidth]
-   * @param {number} [dHeight]
-   * @returns {this}
-   */
-  draw(img, sx, sy, sWidth, sHeight, dx = sx, dy = sy, dWidth = sWidth, dHeight = sHeight) {
-    this.#bufferCtx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-    this.#dirty = true;
-    return this;
-  }
-
-  /**
-   * Setup the canvas
-   * @returns {this}
-   */
-  init() {
-    this.#bufferCtx.imageSmoothingEnabled = false;
-    this.#ctx.imageSmoothingEnabled = false;
-    this.resize(this.#element.width, this.#element.height);
-    this.#ctx.save();
-    this.#element.tabIndex = 0;
-    this.#element.focus();
+    this.#bufferCtx.clearRect(
+      //
+      0,
+      0,
+      this.#bufferCtx.canvas.width,
+      this.#bufferCtx.canvas.height
+    );
     return this;
   }
 
   /**
    * Draw the buffer to the context
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {import('./Camera.js').default} [camera]
    * @returns {this}
    */
-  render() {
+  render(ctx, camera) {
     this.#bufferCtx.imageSmoothingEnabled = false;
-    this.#ctx.imageSmoothingEnabled = false;
-    this.#ctx.clearRect(0, 0, this.width, this.height);
-    this.#ctx.drawImage(this.#bufferCtx.canvas, 0, 0, this.buffer.canvas.width, this.buffer.canvas.height);
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.clearRect(0, 0, this.width, this.height);
+
+    ctx.drawImage(
+      //
+      this.#bufferCtx.canvas,
+      camera?.x || 0,
+      camera?.y || 0,
+      this.#bufferCtx.canvas.width,
+      this.#bufferCtx.canvas.height,
+      0,
+      0,
+      this.#bufferCtx.canvas.width,
+      this.#bufferCtx.canvas.height
+    );
+
     this.#dirty = false;
+
     return this;
   }
 
@@ -143,22 +106,11 @@ export default class Canvas {
    * @returns {this}
    */
   reset() {
-    this.#dirty = true;
-    this.#ctx.restore();
+    this.clear(); // NOTE: add this.clear() if this is removed
+    this.#bufferCtx.restore(); // NOTE: can be removed once .reset() is widely supported
     this.#bufferCtx.resetTransform();
-    this.#ctx.resetTransform();
-    this.#ctx.save();
-    this.clear();
-    this.#ctx.clearRect(0, 0, this.width, this.height);
-    this.resize(this.width, this.height);
-    return this;
-  }
-
-  resizeDOM() {
-    this.element.style.width = '';
-    this.element.style.height = '';
-    this.element.style.width = `${Math.floor(this.element.offsetWidth)}px`;
-    this.element.style.height = `${Math.floor(this.element.offsetHeight)}px`;
+    this.#bufferCtx.reset && this.#bufferCtx.reset(); // NOTE: .reset() new in 2023
+    this.resize(this.width, this.height); // NOTE: add this.#bufferCtx.save() if this is removed
     return this;
   }
 
@@ -170,14 +122,10 @@ export default class Canvas {
    */
   resize(width, height) {
     this.#dirty = true;
-    this.#element.height = height * this.#dpi;
-    this.#element.width = width * this.#dpi;
-    this.#ctx.scale(this.#dpi, this.#dpi);
-    this.#ctx.save();
-    this.#bufferCtx.canvas.height = height;
-    this.#bufferCtx.canvas.width = width;
-    this.#boundingClientRect = this.#element.getBoundingClientRect();
-    // this.resizeDOM();
+    this.#bufferCtx.canvas.height = height * this.#dpi;
+    this.#bufferCtx.canvas.width = width * this.#dpi;
+    this.#bufferCtx.scale(this.#dpi, this.#dpi);
+    this.#bufferCtx.save();
     return this;
   }
 }

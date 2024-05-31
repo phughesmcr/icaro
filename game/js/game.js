@@ -1,28 +1,34 @@
 import { Engine } from '../../engine/engine.js';
 
 async function main() {
-  const game = await fetch('./js/game.json')
-    .then((response) => response.json())
-    .catch((err) => {
-      console.error('Failed to load game data');
-      throw err;
-    });
+  // Engine works like the browser Image api
+  const engine = new Engine();
 
-  // @ts-ignore
-  globalThis.game = game;
+  const canvasElement = document.querySelector('canvas#engine');
 
-  const engine = new Engine({
-    // @ts-ignore
-    canvas: document.querySelector('canvas#engine'),
-    game,
-  });
+  engine.game.onload = () => {
+    engine.init(canvasElement);
+    engine.ticker.start();
+    engine.game.changeMap(0);
 
-  await engine.init(game);
-  engine.ticker.start();
-  engine.game.changeMap(0);
+    console.log(game);
+    console.log(engine);
+  };
 
-  // @ts-ignore
+  // handle game errors. Engine errors will simply throw.
+  engine.game.onerror = (err) => {
+    console.error(err);
+  };
+
+  // the game data is a json file
+  const game = await fetch('./js/game.json').then((response) => response.json());
+
+  // like the Image api, you set the src to start the loading process
+  engine.game.src = game;
+
+  // for debugging purposes only, don't expose these in production
   globalThis.engine = engine;
+  globalThis.game = game;
 }
 
 window.onload = main;

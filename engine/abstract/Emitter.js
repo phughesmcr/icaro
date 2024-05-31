@@ -1,24 +1,23 @@
 /**
- * @module
- *
- * The Emitter class is a simple event emitter implementation.
+ * @module       Emitter
+ * @description  A simple event emitter class
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
  */
+
+/**
+ * @typedef {{ fn: Function, context?: any }} Subscription
+ */
+
 export default class Emitter {
   /**
    * The event subscription map
-   * @type {Map<string, { fn: Function, context?: any }[]>}
+   * @type {Map<string, Subscription[]>}
    */
-  #listeners;
+  #listeners = new Map();
 
-  /**
-   * Create a new Emitter.
-   * @abstract
-   */
-  constructor() {
-    this.#listeners = new Map();
-  }
-
-  /** @returns a copy of the event subscription map. */
+  /** @returns {Record<string, Subscription[]>} a copy of the event subscription map. */
   get observers() {
     return Object.fromEntries(this.#listeners.entries());
   }
@@ -62,14 +61,14 @@ export default class Emitter {
    * Emits an event, calling all subscribed listeners.
    *
    * @param {string} key - The key of the event to emit.
-   * @param {Array<any>} args - The arguments to pass to the listener functions.
+   * @param {any} [payload] - Optional argArray to send to `subscriber.fn.call(thisArg, payload)`.
    * @returns {this} - the event emitter.
    */
-  emit(key, ...args) {
+  emit(key, payload) {
     const subscribers = this.#listeners.get(key);
-    if (!subscribers) return this;
+    if (!subscribers || !subscribers.length) return this;
     for (const subscriber of subscribers) {
-      subscriber.fn.apply(subscriber.context, args);
+      subscriber.fn.call(subscriber.context, payload);
     }
     return this;
   }
@@ -93,7 +92,7 @@ export default class Emitter {
    */
   removeListener(key, callback) {
     const subscribers = this.#listeners.get(key);
-    if (subscribers) {
+    if (subscribers && subscribers.length) {
       const idx = subscribers.findIndex((subscriber) => subscriber.fn === callback);
       if (idx > -1) {
         subscribers.splice(idx, 1);

@@ -41,5 +41,6 @@
   ],
   "exclude": [
     "vendor/**/*",
+    "game/js/game.js"
   ]
 }

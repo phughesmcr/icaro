@@ -1,3 +1,11 @@
+/**
+ * @module       GamePad
+ * @description  A GamePad class for handling Gamepad input.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ */
+
 export default class GamePad {
   /** @type {Set<Gamepad>} */
   #pads = new Set();

@@ -1,9 +1,20 @@
 /**
+ * @module       Utils
+ * @description  Shared utility functions.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ */
+
+/** @returns {void} */
+export function NOOP() {}
+
+/**
  * @param {URL | string} url
  * @returns {Promise<HTMLImageElement>}
  */
-export const loadImage = (url) => {
-  return new Promise((resolve, reject) => {
+export const loadImage = (url) =>
+  new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.style.imageRendering = '-moz-crisp-edges';
@@ -14,14 +25,12 @@ export const loadImage = (url) => {
     img.onerror = reject;
     img.src = url.toString();
   });
-};
 
 /**
- *
  * @param {(...args: Array<any>) => void} callback
  * @param {number} time
  * @param {any} [thisArg]
- * @returns
+ * @returns {(...args: Array<any>) => void}
  */
 export const debounce = (callback, time, thisArg) => {
   /** @type {number} */
@@ -35,11 +44,10 @@ export const debounce = (callback, time, thisArg) => {
 };
 
 /**
- *
  * @param {(...args: Array<any>) => void} callback
  * @param {number} time
  * @param {any} [thisArg]
- * @returns
+ * @returns {(...args: Array<any>) => void}
  */
 export const throttle = (callback, time, thisArg) => {
   /** @type {boolean} */
@@ -56,15 +64,6 @@ export const throttle = (callback, time, thisArg) => {
 };
 
 /**
- *
- * @param {number} n
- * @param {number} min
- * @param {number} max
- * @returns {number}
- */
-export const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
-
-/**
  * Try to request pointer lock on an element without throwing an error.
  * @param {Element} element
  * @returns {Promise<Element>}
@@ -76,11 +75,7 @@ export const requestPointerLockSafely = async (element) => {
       await element.requestPointerLock({
         unadjustedMovement: true,
       });
-    } catch (_) {
-      try {
-        element.requestPointerLock();
-      } catch (_) {}
-    }
+    } catch (_) {}
   }
   return element;
 };

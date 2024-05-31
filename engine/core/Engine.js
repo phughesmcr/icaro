@@ -1,93 +1,91 @@
-import Emitter from '../abstract/Emitter.js';
-import { debounce, requestFullscreenSafely, requestPointerLockSafely } from '../utils.js';
+/**
+ * @module       Engine
+ * @description  The central game engine class
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ */
+
+import { round } from '../math/utils.js';
+import { NOOP, requestPointerLockSafely } from '../utils.js';
 import Ticker from './Ticker.js';
 import Game from './game/Game.js';
 import InputManager from './input/InputManager.js';
 import Renderer from './renderer/Renderer.js';
 
-/**
- * @typedef {Object} EngineSpec
- * @property {HTMLCanvasElement} canvas
- */
-
-/**
- * @module
- *
- * The Engine class is the central context, holding the game state and logic.
- */
-export default class Engine extends Emitter {
-  /** @type {Game} */
+export default class Engine {
+  /**
+   * @readonly
+   * @type {Game}
+   */
   game;
 
-  /** @type {InputManager} */
+  /**
+   * @readonly
+   * @type {InputManager}
+   */
   input;
 
-  /** @type {Renderer} */
+  /**
+   * @readonly
+   * @type {Renderer}
+   */
   renderer;
 
-  /** @type {Ticker} */
+  /**
+   * @readonly
+   * @type {Ticker}
+   */
   ticker;
 
   /**
    * Create a new Engine.
-   * @param {EngineSpec} spec
    */
-  constructor(spec) {
-    super();
-    this.ticker = new Ticker();
-    this.input = new InputManager();
+  constructor() {
     this.game = new Game();
-    this.renderer = new Renderer(spec.canvas);
-
-    // note: these go here to ensure they run first
-    this.ticker.on('preUpdate', this.#preUpdate, { context: this });
-    this.ticker.on('postUpdate', this.#postUpdate, { context: this });
-    this.ticker.on('update', this.#update, { context: this });
-
-    Object.freeze(this);
+    this.input = new InputManager();
+    this.renderer = new Renderer();
+    this.ticker = new Ticker();
   }
 
   /**
-   * Setup the engine elements and load the game assets.
-   * @param {import('./game/Game.js').GameSpec} game
+   * Setup the engine elements.
+   * @param {HTMLCanvasElement} canvas
    * @returns {Promise<this>}
    */
-  async init(game) {
+  async init(canvas) {
+    const canvasCtx = canvas.getContext('2d', { desynchronized: true });
+    if (!canvasCtx) throw new Error('Failed to get 2D canvas context');
+
+    // note: these go here to ensure they run first
+    this.ticker.on('preUpdate', this.#preUpdate, { context: this });
+    this.ticker.on('update', this.#update, { context: this });
+    this.ticker.on('postUpdate', this.#postUpdate.bind(this, canvasCtx));
+
     // add external event listeners
-    globalThis.onresize = debounce(() => this.renderer.canvas.resizeDOM(), this.ticker.tickDuration);
     globalThis.onblur = () => this.input.reset();
-    globalThis.onfocus = () => {};
+    globalThis.onfocus = NOOP;
+
     globalThis.document.onfullscreenchange = () => this.input.mouse.reset();
-    globalThis.document.onpointerlockchange = () => {
-      this.input.mouse.reset();
-      if (globalThis.document?.pointerLockElement === this.renderer.canvas.element) {
-        // reset the mouse position to the center of the canvas
-        this.input.mouse.x = this.renderer.canvas.element.width / 2;
-        this.input.mouse.y = this.renderer.canvas.element.height / 2;
-      }
-    };
+    globalThis.document.onpointerlockchange = () => NOOP;
 
     globalThis.onkeydown = (e) => this.input.keyboard.keyDown(e);
     globalThis.onkeyup = (e) => this.input.keyboard.keyUp(e);
 
-    const { element } = this.renderer.canvas;
-    element.onmousedown = (e) => mouseDown(this, e);
-    element.onmouseup = (e) => mouseUp(this, e);
-    element.onmousemove = (e) => mouseMove(this, e);
-    element.oncontextmenu = (e) => e.preventDefault();
+    canvas.onmousedown = (e) => mouseDown(this, e);
+    canvas.onmouseup = (e) => mouseUp(this, e);
+    canvas.onmousemove = (e) => mouseMove(this, e);
+    canvas.oncontextmenu = (e) => e.preventDefault();
 
     // add internal event listeners
-    this.game.on('mapChange', () => {
+    this.game.onmapchange = () => {
       this.renderer.camera.reset();
-      this.renderer.camera.centerOn(Math.round(this.game.player.position.x), Math.round(this.game.player.position.y));
-    });
+      this.renderer.camera.centerOn(round(this.game.player.position.x), round(this.game.player.position.y));
+    };
 
     // initialize the engine elements
     this.input.init();
-    this.renderer.init(game.tileSize);
-
-    // load the game assets
-    await this.game.init(game);
+    this.renderer.init(this.game.tileSize);
 
     return this;
   }
@@ -130,12 +128,13 @@ export default class Engine extends Emitter {
   }
 
   /**
+   * @param {CanvasRenderingContext2D} ctx
    * @param {number} alpha
    * @returns {void}
    */
-  #postUpdate(alpha) {
+  #postUpdate(ctx, alpha) {
     this.renderer.draw2d(this.game);
-    this.renderer.render();
+    this.renderer.render(ctx);
     this.input.update();
   }
 
@@ -150,11 +149,12 @@ export default class Engine extends Emitter {
 
 async function mouseDown(/** @type {Engine} */ engine, /** @type {MouseEvent} */ e) {
   e.preventDefault();
+  const element = e.currentTarget;
+  if (!element) return;
   const { mouse } = engine.input;
-  const element = engine.renderer.canvas.element;
   if (e.button === 0) {
     mouse.leftBtn = true;
-    await requestPointerLockSafely(element);
+    await requestPointerLockSafely(/** @type {Element} */ (element));
     // await requestFullscreenSafely(element);
   } else if (e.button === 2) {
     mouse.rightBtn = true;
@@ -172,6 +172,8 @@ function mouseUp(/** @type {Engine} */ engine, /** @type {MouseEvent} */ e) {
 }
 
 function mouseMove(/** @type {Engine} */ engine, /** @type {MouseEvent} */ e) {
+  const element = e.currentTarget;
+  if (!element) return;
   const { mouse } = engine.input;
   e.preventDefault();
   if (globalThis.document.pointerLockElement === e.target) {
@@ -181,7 +183,8 @@ function mouseMove(/** @type {Engine} */ engine, /** @type {MouseEvent} */ e) {
     mouse.x = e.pageX / window.innerWidth;
     mouse.y = e.pageY / window.innerHeight;
   } else {
-    const offset = engine.renderer.canvas.boundingClientRect;
+    // @ts-ignore
+    const offset = element.getBoundingClientRect();
     mouse.x = (e.clientX - offset.left) / offset.width;
     mouse.y = (e.clientY - offset.top) / offset.height;
   }

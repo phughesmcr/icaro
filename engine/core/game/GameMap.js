@@ -1,4 +1,12 @@
 /**
+ * @module       GameMap
+ * @description  GameMap class for handling game map data.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ */
+
+/**
  * @typedef {Object} MapSpec
  * @property {number} width - the width of the map in tiles
  * @property {number} height - the height of the map in tiles
@@ -8,24 +16,10 @@
  * @property {string} ceiling - ceiling color
  */
 
+import { floor } from '../../math/utils.js';
 import Vec2 from '../../math/Vec2.js';
 
 export default class GameMap {
-  static DEFAULT_TILES = [
-    // brick
-    '#FF0000',
-    // grass
-    '#00FF00',
-    // water
-    '#0000FF',
-    // wood
-    '#8B4513',
-    // stone
-    '#A9A9A9',
-    // sand
-    '#FFD700',
-  ];
-
   /**
    * @readonly
    * @type {string}
@@ -70,16 +64,17 @@ export default class GameMap {
    */
   constructor(spec) {
     const { grid, height, width, things, ceiling, floor } = spec;
+
+    if (grid.length !== width * height || things.length !== width * height) {
+      throw new Error('Invalid map data');
+    }
+
     this.width = width;
     this.height = height;
     this.ceiling = ceiling;
     this.floor = floor;
     this.#grid = new Uint8ClampedArray(grid);
     this.#things = new Uint8ClampedArray(things);
-    if (this.#grid.length !== width * height || this.#things.length !== width * height) {
-      throw new Error('Invalid map data');
-    }
-    Object.seal(this);
   }
 
   get grid() {
@@ -108,7 +103,7 @@ export default class GameMap {
    * @returns
    */
   toIndex(x, y) {
-    return Math.floor(x + y * this.width);
+    return floor(x + y * this.width);
   }
 
   /**
@@ -117,7 +112,7 @@ export default class GameMap {
    * @returns {Vec2}
    */
   toTile(idx) {
-    return new Vec2(idx % this.width, Math.floor(idx / this.width));
+    return new Vec2(idx % this.width, floor(idx / this.width));
   }
 
   /**

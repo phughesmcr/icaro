@@ -1,8 +1,10 @@
 /**
- * @module Mouse
- *
- * The Mouse data object
+ * @module       Mouse
+ * @description  A Mouse class for handling mouse input.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
  */
+
 export default class Mouse {
   /** @type {number} */
   dx = 0;
@@ -21,13 +23,6 @@ export default class Mouse {
 
   /** @type {boolean} */
   rightBtn = false;
-
-  /**
-   * Create a new mouse handler
-   */
-  constructor() {
-    Object.seal(this);
-  }
 
   /**
    * Initialize the Mouse handler and add all event listeners

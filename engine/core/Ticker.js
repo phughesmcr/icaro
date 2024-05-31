@@ -1,10 +1,14 @@
-import Emitter from '../abstract/Emitter.js';
-
 /**
- * @module
- *
- * The Ticker is responsible for running the game loop
+ * @module       Ticker
+ * @description  A fixed-rate game loop
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
  */
+
+import Emitter from '../abstract/Emitter.js';
+import { floor } from '../math/utils.js';
+
 export default class Ticker extends Emitter {
   /** @type {number} */
   static DEFAULT_TICK_RATE = 60;
@@ -16,10 +20,10 @@ export default class Ticker extends Emitter {
   #animationFrame = null;
 
   /** @type {number} */
-  #frames = 0;
+  #fps = 0;
 
   /** @type {number} */
-  #fps = 0;
+  #framesInPastSecond = 0;
 
   /** @type {number} */
   #lag = 0;
@@ -30,30 +34,25 @@ export default class Ticker extends Emitter {
   /** @type {number|null} */
   #previousTime = null;
 
-  /**
-   * @readonly
-   * @type {number}
-   */
-  tickRate = Ticker.DEFAULT_TICK_RATE;
+  /** @type {number} */
+  #tickRate = Ticker.DEFAULT_TICK_RATE;
 
-  /**
-   * @readonly
-   * @type {number}
-   */
-  tickDuration = 1000 / this.tickRate;
+  /** @type {number} */
+  #tickDurationMs = 1000 / this.#tickRate;
 
-  /**
-   * @readonly
-   * @type {number}
-   */
-  maxLag = Ticker.DEFAULT_MAX_LAG_FRAMES * this.tickRate;
+  /** @type {number} */
+  #maxLag = Ticker.DEFAULT_MAX_LAG_FRAMES * this.#tickRate;
 
   /**
    * Create a new Ticker
    */
   constructor() {
     super();
-    Object.seal(this);
+  }
+
+  /** @returns {number} */
+  get fps() {
+    return this.#fps;
   }
 
   /** @returns {boolean} */
@@ -66,14 +65,25 @@ export default class Ticker extends Emitter {
     return this.#paused;
   }
 
-  getFPS() {
-    return this.#fps;
+  /** @returns {number} */
+  get tickDurationMs() {
+    return this.#tickDurationMs;
+  }
+
+  /**
+   * @param {number} ticksPerSecond
+   * @example ticker.tickRate = 60; // sets the tick rate to 60 ticks per second
+   */
+  set tickRate(ticksPerSecond) {
+    this.#tickRate = ticksPerSecond;
+    this.#tickDurationMs = 1000 / this.#tickRate;
+    this.#maxLag = Ticker.DEFAULT_MAX_LAG_FRAMES * this.#tickRate;
   }
 
   /**
    * Pauses but does not stop the game loop
-   * @returns {this}
    * @fires Ticker#pause
+   * @returns {this}
    */
   pause() {
     if (!this.#animationFrame || this.#paused) return this;
@@ -84,8 +94,8 @@ export default class Ticker extends Emitter {
 
   /**
    * Resumes the game loop if it was paused
-   * @returns {this}
    * @fires Ticker#resume
+   * @returns {this}
    */
   resume() {
     if (!this.#animationFrame || !this.#paused) return this;
@@ -97,10 +107,11 @@ export default class Ticker extends Emitter {
 
   /**
    * Start the game loop
-   * @returns {this}
    * @fires Ticker#start
+   * @returns {this}
    */
   start() {
+    // bail early if we're just paused
     if (this.#animationFrame) {
       this.resume();
       return this;
@@ -122,32 +133,41 @@ export default class Ticker extends Emitter {
   /**
    * Advance the game loop by one frame
    * @param {number} [time] - The current time in milliseconds. Defaults to performance.now()
-   * @returns {this}
    * @fires Ticker#preUpdate
    * @fires Ticker#update
    * @fires Ticker#postUpdate
    */
   #step(time = globalThis.performance.now()) {
-    if (this.#paused) return this;
+    if (this.#paused) return;
+
+    // calculate the time since the last frame
     let delta = time - (this.#previousTime || time);
-    if (delta > this.maxLag) {
-      delta = this.tickDuration;
+    if (delta > this.#maxLag) {
+      delta = this.tickDurationMs;
     }
     this.#lag += delta;
+
+    // update the game state
     this.emit('preUpdate');
-    while (this.#lag >= this.tickDuration) {
-      this.emit('update', this.tickDuration);
-      this.#lag -= this.tickDuration;
+    while (this.#lag >= this.tickDurationMs) {
+      this.emit('update', this.tickDurationMs);
+      this.#lag -= this.tickDurationMs;
     }
-    this.#frames++;
+
+    // update FPS
+    this.#framesInPastSecond++;
     if (time > (this.#previousTime || time) + 1000) {
-      this.#fps = Math.round((this.#frames * 1000) / (time - (this.#previousTime || time)));
+      this.#fps = floor((this.#framesInPastSecond * 1000) / (time - (this.#previousTime || time)));
       this.#previousTime = time;
-      this.#frames = 0;
+      this.#framesInPastSecond = 0;
     }
+
     this.#previousTime = time;
-    this.emit('postUpdate', this.#lag / this.tickDuration);
-    return this;
+
+    // NOTE: emit already checks if the event exists but this avoids the overhead of division
+    if (this.hasListener('postUpdate')) {
+      this.emit('postUpdate', this.#lag / this.tickDurationMs);
+    }
   }
 
   /**

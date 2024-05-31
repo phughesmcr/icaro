@@ -1,4 +1,12 @@
-import Emitter from '../../abstract/Emitter.js';
+/**
+ * @module       Ray
+ * @description  A Game is the top-level container for a game world.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ */
+
+import { NOOP } from '../../utils.js';
 import GameMap from './GameMap.js';
 import Player from './Player.js';
 
@@ -9,12 +17,7 @@ import Player from './Player.js';
  * @property {number} tileSize - the size of a tile in pixels
  */
 
-/**
- * @module
- *
- * A Game is the top-level container for a game world.
- */
-export default class Game extends Emitter {
+export default class Game {
   static DEFAULT_TILESIZE = 64;
 
   /** @type {number} */
@@ -23,22 +26,28 @@ export default class Game extends Emitter {
   /** @type {Array<GameMap>} */
   #maps = [];
 
+  /** @type {(err: Error) => void} */
+  onerror = NOOP;
+
+  /** @type {() => void} */
+  onload = NOOP;
+
+  /** @type {(map: GameMap | undefined) => void} */
+  onmapchange = NOOP;
+
   /** @type {Player} */
   #player = new Player();
 
-  /** @type {Array<String>} */
+  /** @type {Array<String>} an array of hex colour strings */
   #tiles = [];
 
   /** @type {number} */
   #tileSize = Game.DEFAULT_TILESIZE;
 
   /**
-   * Create a new Game
+   * @type {GameSpec | undefined}
    */
-  constructor() {
-    super();
-    Object.seal(this);
-  }
+  #src;
 
   /** @type {GameMap | undefined} */
   get currentMap() {
@@ -58,6 +67,26 @@ export default class Game extends Emitter {
   /** @returns {Player} */
   get player() {
     return this.#player;
+  }
+
+  /** @returns {GameSpec | undefined} */
+  get src() {
+    return this.#src;
+  }
+
+  /**
+   * Load the game data and initialize the engine.
+   * @param {GameSpec | undefined} gameData
+   */
+  set src(gameData) {
+    this.reset();
+    if (gameData == undefined) return;
+    this.init(gameData)
+      .then(() => {
+        this.onload();
+        this.#src = gameData;
+      })
+      .catch((err) => this.onerror(err));
   }
 
   /** @returns {Array<String>} */
@@ -85,7 +114,8 @@ export default class Game extends Emitter {
     this.#player.reset();
     const playerStart = map.getPlayerGridTile();
     this.#player.placeAt(playerStart.x, playerStart.y, this.tileSize);
-    this.emit('mapChange', this.#maps[index]);
+
+    this.onmapchange(this.#maps[index]);
   }
 
   /**
@@ -97,8 +127,18 @@ export default class Game extends Emitter {
     this.#tileSize = tileSize;
     tiles.forEach((tile) => this.#tiles.push(tile));
     maps.forEach((map) => this.#maps.push(new GameMap(map)));
-
     // TODO: load assets
+    return this;
+  }
+
+  /** @returns {this} */
+  reset() {
+    this.#currentMap = -1;
+    this.#maps.length = 0;
+    this.#player.reset();
+    this.#tiles.length = 0;
+    this.#tileSize = Game.DEFAULT_TILESIZE;
+    this.#src = undefined;
     return this;
   }
 

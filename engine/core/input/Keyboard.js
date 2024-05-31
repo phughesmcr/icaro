@@ -1,8 +1,11 @@
 /**
- * @module
- *
- * The Keyboard handler manages the state of the keyboard input.
+ * @module       Keyboard
+ * @description  The Keyboard handler manages the state of the keyboard input.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
  */
+
 export default class Keyboard {
   /** @type {Set<string>} */
   static CAPTURED_KEYCODES = new Set([
@@ -30,13 +33,6 @@ export default class Keyboard {
 
   /** @type {Set<string>} */
   #previousState = new Set();
-
-  /**
-   * Create a new Keyboard handler
-   */
-  constructor() {
-    Object.freeze(this);
-  }
 
   /**
    * Set the key state to false on key up

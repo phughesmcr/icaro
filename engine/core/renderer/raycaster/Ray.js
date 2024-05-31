@@ -1,12 +1,15 @@
+/**
+ * @module       Ray
+ * @description  A Ray class for raycasting in 2D space.
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
+ * @see          {@link https://github.com/HardCoreCodin/Rational-Ray-Casting}
+ */
+
+import { floor } from '../../../math/utils.js';
 import Vec2 from '../../../math/Vec2.js';
 
-/**
- * @module
- *
- * Based on:
- * @see {@link https://github.com/HardCoreCodin/Rational-Ray-Casting}
- * @license MIT
- */
 export default class Ray {
   /** @type {Vec2} */
   direction;
@@ -41,7 +44,6 @@ export default class Ray {
     this.#verticalIntersect = new Vec2(0, 0);
     this.#nextHorizontalIntersect = new Vec2(0, 0);
     this.#nextVerticalIntersect = new Vec2(0, 0);
-    Object.seal(this);
   }
 
   /** @returns {boolean} */
@@ -72,7 +74,7 @@ export default class Ray {
    * @returns {number}
    */
   getClosestIntercept(n, tileSize, vertical) {
-    let intercept = Math.floor(n / tileSize) * tileSize;
+    let intercept = floor(n / tileSize) * tileSize;
     if (vertical && this.isFacingDown) {
       intercept += tileSize;
     } else if (this.isFacingRight) {
@@ -124,7 +126,7 @@ export default class Ray {
     this.#nextVerticalIntersect.set(0, 0);
 
     // HORIZONTAL INTERSECTION DETECTION
-    yIntercept = Math.floor(origin.y / tileSize) * tileSize;
+    yIntercept = floor(origin.y / tileSize) * tileSize;
     yIntercept += this.isFacingDown ? tileSize : 0;
 
     // Find the x-coordinate of the closest horizontal grid intersection
@@ -165,7 +167,7 @@ export default class Ray {
 
     // VERTICAL INTERSECTION DETECTION
     // Find the x-coordinate of the closest vertical grid intersenction
-    xIntercept = Math.floor(origin.x / tileSize) * tileSize;
+    xIntercept = floor(origin.x / tileSize) * tileSize;
     xIntercept += this.isFacingRight ? tileSize : 0;
 
     // Find the y-coordinate of the closest vertical grid intersection
@@ -203,10 +205,10 @@ export default class Ray {
 
     // Calculate the distance to the closest wall
     const horizontalDistance = foundHorizontalWall
-      ? origin.squaredDistanceBetween(this.#horizontalIntersect)
+      ? Vec2.squaredDistanceBetween(origin, this.#horizontalIntersect) //origin.squaredDistanceBetween(this.#horizontalIntersect)
       : Number.MAX_SAFE_INTEGER;
     const verticalDistance = foundVerticalWall
-      ? origin.squaredDistanceBetween(this.#verticalIntersect)
+      ? Vec2.squaredDistanceBetween(origin, this.#verticalIntersect) //origin.squaredDistanceBetween(this.#verticalIntersect)
       : Number.MAX_SAFE_INTEGER;
 
     // update the wallHit and wasHitVertical properties

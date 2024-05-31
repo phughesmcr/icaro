@@ -1,20 +1,23 @@
 /**
- * @module
- *
- * A 2d Vector
+ * @module       Vec2
+ * @description  A 2d Vector with x and y components
+ * @author       P. Hughes <code@phugh.es>
+ * @copyright    2024. All rights reserved.
+ * @license      {@link https://opensource.org/licenses/MIT|MIT License}
  */
+
 export default class Vec2 {
   /** @type {Float32Array} */
-  #buffer;
+  #buffer = new Float32Array(2);
 
   /**
    * Create a new 2d Vector
-   * @param {number} x
-   * @param {number} y
+   * @param {number} [x=0]
+   * @param {number} [y=0]
    */
-  constructor(x, y) {
-    this.#buffer = Float32Array.from([x, y]);
-    Object.freeze(this);
+  constructor(x = 0, y = 0) {
+    this.#buffer[0] = x;
+    this.#buffer[1] = y;
   }
 
   /** @returns {number} */
