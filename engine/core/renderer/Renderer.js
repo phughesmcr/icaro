@@ -95,10 +95,16 @@ export default class Renderer {
    */
   draw2d(game) {
     this.canvas.clear();
+    this.canvas.ctx.save();
+    this.canvas.ctx.scale(this.camera.zoom, this.camera.zoom);
+    this.canvas.ctx.translate(-this.camera.x, -this.camera.y);
+
     this.camera.centerOn(game.player.position.x, game.player.position.y);
-    this.camera.prepareCtx(this.canvas.ctx);
+
     this.#drawTopDownTileMap(game);
+
     game.player.draw2d(this.canvas.ctx);
+
     this.canvas.ctx.restore();
     return this;
   }
@@ -152,7 +158,9 @@ export default class Renderer {
   draw3d(game, alpha) {
     this.canvas.clear();
     this.camera.reset();
-    this.camera.prepareCtx(this.canvas.ctx);
+    this.canvas.ctx.save();
+    this.canvas.ctx.scale(this.camera.zoom, this.camera.zoom);
+    this.canvas.ctx.translate(-this.camera.x, -this.camera.y);
     this.#drawFirstPerson(game);
     this.canvas.ctx.restore();
     return this;

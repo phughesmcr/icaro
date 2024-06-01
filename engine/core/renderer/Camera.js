@@ -60,18 +60,6 @@ export default class Camera {
   }
 
   /**
-   * Correctly scales and translates the canvas context ahead of rendering
-   * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} ctx - the canvas context to render to
-   * @returns {this}
-   */
-  prepareCtx(ctx) {
-    ctx.save();
-    ctx.scale(this.zoom, this.zoom);
-    ctx.translate(-this.x, -this.y);
-    return this;
-  }
-
-  /**
    * Zooms by a given factor
    * @param {number} factor
    */
