@@ -38,8 +38,8 @@ export const debounce = (callback, time, thisArg) => {
   const boundCallback = thisArg ? callback.bind(thisArg) : callback;
   /** @param {Array<any>} args */
   return (...args) => {
-    globalThis.clearTimeout(debounceTimer);
-    debounceTimer = globalThis.setTimeout(boundCallback, time, args);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(boundCallback, time, args);
   };
 };
 
@@ -56,7 +56,7 @@ export const throttle = (callback, time, thisArg) => {
   return (...args) => {
     if (throttlePause) return;
     throttlePause = true;
-    globalThis.setTimeout(() => {
+    setTimeout(() => {
       callback.apply(thisArg ? thisArg : this, args);
       throttlePause = false;
     }, time);
@@ -69,7 +69,7 @@ export const throttle = (callback, time, thisArg) => {
  * @returns {Promise<Element>}
  */
 export const requestPointerLockSafely = async (element) => {
-  if (!globalThis.document?.pointerLockElement && element.requestPointerLock) {
+  if (!document?.pointerLockElement && element.requestPointerLock) {
     try {
       // @ts-ignore
       await element.requestPointerLock({
@@ -87,7 +87,7 @@ export const requestPointerLockSafely = async (element) => {
  */
 export const requestFullscreenSafely = async (element) => {
   try {
-    if (!globalThis.document?.fullscreenElement && element.requestFullscreen) {
+    if (!document?.fullscreenElement && element.requestFullscreen) {
       await element.requestFullscreen({ navigationUI: 'hide' });
     }
   } catch (_) {}

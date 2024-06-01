@@ -100,7 +100,7 @@ export default class Ticker extends Emitter {
   resume() {
     if (!this.#animationFrame || !this.#paused) return this;
     this.#paused = false;
-    this.#previousTime = globalThis.performance.now();
+    this.#previousTime = performance.now();
     this.emit('resume');
     return this;
   }
@@ -119,13 +119,13 @@ export default class Ticker extends Emitter {
 
     /** @param {number} time */
     const run = (time) => {
-      this.#animationFrame = globalThis.requestAnimationFrame(run);
+      this.#animationFrame = requestAnimationFrame(run);
       this.#paused = false;
       if (!this.#previousTime) this.#previousTime = time;
       this.#step(time);
     };
 
-    this.#animationFrame = globalThis.requestAnimationFrame(run);
+    this.#animationFrame = requestAnimationFrame(run);
     this.emit('start');
     return this;
   }
@@ -137,7 +137,7 @@ export default class Ticker extends Emitter {
    * @fires Ticker#update
    * @fires Ticker#postUpdate
    */
-  #step(time = globalThis.performance.now()) {
+  #step(time = performance.now()) {
     if (this.#paused) return;
 
     // calculate the time since the last frame
@@ -177,7 +177,7 @@ export default class Ticker extends Emitter {
    */
   stop() {
     if (!this.#animationFrame) return this;
-    globalThis.cancelAnimationFrame(this.#animationFrame);
+    cancelAnimationFrame(this.#animationFrame);
     this.#animationFrame = null;
     this.#paused = false;
     this.emit('stop');
