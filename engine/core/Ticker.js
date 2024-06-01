@@ -164,10 +164,7 @@ export default class Ticker extends Emitter {
 
     this.#previousTime = time;
 
-    // NOTE: emit already checks if the event exists but this avoids the overhead of division
-    if (this.hasListener('postUpdate')) {
-      this.emit('postUpdate', this.#lag / this.tickDurationMs);
-    }
+    this.emit('postUpdate', this.#lag / this.tickDurationMs);
   }
 
   /**
