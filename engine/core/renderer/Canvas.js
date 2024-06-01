@@ -74,30 +74,14 @@ export default class Canvas {
   /**
    * Draw the buffer to the context
    * @param {CanvasRenderingContext2D} ctx
-   * @param {import('./Camera.js').default} [camera]
    * @returns {this}
    */
-  render(ctx, camera) {
+  render(ctx) {
     this.#bufferCtx.imageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
-
     ctx.clearRect(0, 0, this.width, this.height);
-
-    ctx.drawImage(
-      //
-      this.#bufferCtx.canvas,
-      camera?.x || 0,
-      camera?.y || 0,
-      this.#bufferCtx.canvas.width,
-      this.#bufferCtx.canvas.height,
-      0,
-      0,
-      this.#bufferCtx.canvas.width,
-      this.#bufferCtx.canvas.height
-    );
-
+    ctx.drawImage(this.#bufferCtx.canvas, 0, 0, this.#bufferCtx.canvas.width, this.#bufferCtx.canvas.height);
     this.#dirty = false;
-
     return this;
   }
 
