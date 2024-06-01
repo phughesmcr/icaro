@@ -129,11 +129,11 @@ export default class Engine {
 
   /**
    * @param {CanvasRenderingContext2D} ctx
-   * @param {number} alpha
+   * @param {number} interpolation
    * @returns {void}
    */
-  #postUpdate(ctx, alpha) {
-    this.renderer.draw2d(this.game);
+  #postUpdate(ctx, interpolation) {
+    this.renderer.draw2d(this.game, interpolation);
     this.renderer.render(ctx);
     this.input.update();
   }
