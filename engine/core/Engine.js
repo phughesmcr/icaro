@@ -58,8 +58,8 @@ export default class Engine {
     if (!canvasCtx) throw new Error('Failed to get 2D canvas context');
 
     // note: these go here to ensure they run first
-    this.ticker.on('preUpdate', this.#preUpdate, { context: this });
-    this.ticker.on('update', this.#update, { context: this });
+    this.ticker.on('preUpdate', this.#preUpdate.bind(this));
+    this.ticker.on('update', this.#update.bind(this));
     this.ticker.on('postUpdate', this.#postUpdate.bind(this, canvasCtx));
 
     // add external event listeners

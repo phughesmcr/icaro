@@ -6,18 +6,14 @@
  * @license      {@link https://opensource.org/licenses/MIT|MIT License}
  */
 
-/**
- * @typedef {{ fn: Function, context?: any }} Subscription
- */
-
 export default class Emitter {
   /**
    * The event subscription map
-   * @type {Map<string, Subscription[]>}
+   * @type {Map<string, Function[]>}
    */
   #listeners = new Map();
 
-  /** @returns {Record<string, Subscription[]>} a copy of the event subscription map. */
+  /** @returns {Record<string, Function[]>} a copy of the event subscription map. */
   get observers() {
     return Object.fromEntries(this.#listeners.entries());
   }
@@ -27,18 +23,13 @@ export default class Emitter {
    *
    * @param {string} key - The key of the event to subscribe to.
    * @param {Function} observer - The listener/callback function to subscribe.
-   * @param {Object} [options] - Optional subscription options.
-   * @param {boolean} [options.once] - If `true`, the listener will be automatically unsubscribed after being called.
-   * @param {any} [options.context] - The `this` value to use when calling the listener function.
-   * @returns {Function} A function that can be used to unsubscribe the listener.
+d   * @returns {Function} A function that can be used to unsubscribe the listener.
    */
-  on(key, observer, options) {
-    const { context, once } = options || {};
-    if (once) return this.once(key, observer, context);
+  on(key, observer) {
     if (!this.#listeners.has(key)) {
-      this.#listeners.set(key, [{ fn: observer, context }]);
+      this.#listeners.set(key, [observer]);
     } else {
-      this.#listeners.get(key)?.push({ fn: observer, context });
+      this.#listeners.get(key)?.push(observer);
     }
     return this.removeListener.bind(this, key, observer);
   }
@@ -68,7 +59,7 @@ export default class Emitter {
     const subscribers = this.#listeners.get(key);
     if (!subscribers || !subscribers.length) return this;
     for (const subscriber of subscribers) {
-      subscriber.fn.call(subscriber.context, payload);
+      subscriber(payload);
     }
     return this;
   }
@@ -93,7 +84,7 @@ export default class Emitter {
   removeListener(key, callback) {
     const subscribers = this.#listeners.get(key);
     if (subscribers && subscribers.length) {
-      const idx = subscribers.findIndex((subscriber) => subscriber.fn === callback);
+      const idx = subscribers.findIndex((subscriber) => subscriber === callback);
       if (idx > -1) {
         subscribers.splice(idx, 1);
         return true;
@@ -107,16 +98,15 @@ export default class Emitter {
    *
    * @param {string} key - The key of the event to subscribe to.
    * @param {Function} callback - The listener function to subscribe.
-   * @param {Object} [options] - Optional subscription options.
    * @returns - A function that can be used to unsubscribe the listener.
    */
-  once(key, callback, options) {
+  once(key, callback) {
     /** @param {Array<any>} args */
     const onceFn = (...args) => {
       this.removeListener(key, onceFn);
       callback(...args);
     };
     // @ts-ignore
-    return this.on(key, onceFn, { ...options, once: false });
+    return this.on(key, onceFn);
   }
 }
